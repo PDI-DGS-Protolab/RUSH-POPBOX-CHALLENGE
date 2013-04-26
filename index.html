@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Telefonica I+D - PopBox+Rush Integration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        }
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+    <script src="../assets/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="brand" href="#">PopBox+Rush</a>
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li class="active"><a href="#SendReq" data-toggle="tab">Send Request</a></li>
+                    <li><a href="#getPics" data-toggle="tab">Get Pictures</a></li>
+                    <li><a href="#about" data-toggle="tab">About</a></li>
+                </ul>
+            </div><!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+
+<div class="container tab-content">
+
+    <div class="tab-pane active" id="SendReq">
+
+
+
+        <h1>Send Request to Rush</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+        <form class="form-horizontal" onsubmit="sendRushRequest(); return false;">
+            <div class="control-group">
+                <label class="control-label" for="inputURL">URL</label>
+                <div class="controls">
+                    <input type="text" id="inputURL" placeholder="URL">
+
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputQueues">Queues</label>
+                <div class="controls">
+                    <input type="text" id="inputQueues" placeholder="Queues">
+                    <span class="help-block">Separated by commas</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <button type="submit" class="btn">Submit</button>
+                </div>
+            </div>
+        </form>
+
+    </div> <!-- /container -->
+
+    <div class="tab-pane" id="getPics">
+
+
+
+        <h1>Get Pictures</h1>
+        <p><a onclick="sendPopBoxRequest()" >Click here to retrieve pictures from PopBox</a></p>
+
+        <div class="container pics" id="picturesDiv"></div>
+
+    </div>
+
+    <div class="tab-pane" id="about">
+
+
+
+        <h1>About</h1>
+        <p>Telefonica I+D April 2013</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+    </div>
+
+
+
+</div>
+
+
+
+<!-- Le javascript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="http://code.jquery.com/jquery.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
+<script>
+
+    function sendReq(url, method, headers, content, callback) {
+
+        var req;
+
+        try {
+
+            var proxyURL = "http://localhost:2001/";
+
+            req = new XMLHttpRequest();
+            req.open(method, proxyURL, true);
+
+            //Set headers
+            req.setRequestHeader('relayer-host', url);
+            for (var head in headers) {
+                req.setRequestHeader(head, headers[head]);
+            }
+
+            if (callback) {
+                req.onload = callback.bind({}, req);
+            }
+            req.send(content);
+
+        }catch (e) {
+            window.alert('An error arises when the petition was being sent');
+        }
+    }
+
+    function sendRushRequest() {
+        var url = 'http://localhost:3001';
+        var contentURL = document.getElementById('inputURL').value;
+        var headers = {};
+        headers['x-relayer-host'] = contentURL;
+        headers['x-relayer-encoding'] = 'base64';
+        headers['x-relayer-topic'] = 'POPBOX';
+
+        sendReq(url, 'GET', headers, '');
+    }
+
+    function sendPopBoxRequest() {
+
+        var url = 'http://localhost:5001/queue/Rush/pop';
+        var headers = {};
+        headers['accept'] = 'application/json';
+
+        var callback = function(req) {
+
+            var recData = JSON.parse(req.responseText);
+
+            for (var i = 0; i < recData.data.length; i++) {
+
+                var elem = document.createElement("img");
+                elem.setAttribute("src", "data:image/png;base64," + recData.data[i]);
+                //elem.setAttribute("height", "768");
+                //elem.setAttribute("width", "1024");
+                elem.setAttribute("alt", "Your picture");
+                document.getElementById("picturesDiv").appendChild(elem);
+
+
+                //console.log(i + ' - ' + recData.data[i]);
+            }
+        }
+
+        sendReq(url, 'POST', headers, '', callback);
+
+    }
+
+</script>
+
+</body>
+</html>
