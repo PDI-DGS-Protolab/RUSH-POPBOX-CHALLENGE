@@ -27,17 +27,17 @@ http.createServer(function (clientReq, clientRes) {
       options.headers = clientReq.headers;
       delete options.headers['relayer-host'];
 
-      console.log(options);
-
       var serverReq = http.request(options, function(serverRes) {
         var newData = '';
 
         serverRes.on('data', function(chunk) {
           newData += chunk;
+          //clientRes.write(chunk);
         });
 
         serverRes.on('end', function() {
           clientRes.end(newData);
+          //clientRes.end();
         });
       });
 
@@ -49,3 +49,7 @@ http.createServer(function (clientReq, clientRes) {
   });
 
 }).listen(2001, 'localhost');
+
+process.on('uncaughtException', function onUncaughtException(err) {
+  console.log('Uncaught Exception: ' + err);
+});

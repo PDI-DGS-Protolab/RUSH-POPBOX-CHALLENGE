@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,13 +16,40 @@
     </style>
     <link href="css/bootstrap-responsive.css" rel="stylesheet">
 
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-    <script src="../assets/js/html5shiv.js"></script>
-    <![endif]-->
 </head>
 
 <body>
+
+<div id="noTransPopBoxModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="noTransPopBoxLabel">Empty Queue!!!</h3>
+    </div>
+    <div class="modal-body">
+        <div class="alert">
+            <strong>Ooppsss!! No transactions has been found in the indicated queue.</strong>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    </div>
+</div>
+
+<div id="errorModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="errorLabel">Empty Queue!!!</h3>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-error">
+            <strong>Ooppsss!! One of your petitions could not be complete. Check it now!!</strong>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button id="checkErrosBtn" data-toggle="tab" href="#errors" class="btn btn-danger" data-dismiss="modal" aria-hidden="true">Check Errors</button>
+    </div>
+</div>
 
 <div class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-inner">
@@ -36,9 +62,10 @@
             <a class="brand" href="#">PopBox+Rush</a>
             <div class="nav-collapse collapse">
                 <ul class="nav">
-                    <li class="active"><a href="#SendReq" data-toggle="tab">Send Request</a></li>
-                    <li><a href="#getPics" data-toggle="tab">Get Pictures</a></li>
-                    <li><a href="#about" data-toggle="tab">About</a></li>
+                    <li id="sendReqTab" class="active"><a href="#SendReq" data-toggle="tab">Send Request (Rush)</a></li>
+                    <li id="getContentTab"><a href="#getContent" data-toggle="tab">Get Content (PopBox)</a></li>
+                    <li id="errosListTab"><a href="#errors" data-toggle="tab">List of Errors</a></li>
+                    <li id="aboutTab"><a href="#about" data-toggle="tab">About</a></li>
                 </ul>
             </div><!--/.nav-collapse -->
         </div>
@@ -52,50 +79,85 @@
 
 
         <h1>Send Request to Rush</h1>
-        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <p>Insert in the following form the file that you want to retrieve and the queues where you want to insert it.</p>
 
-        <form class="form-horizontal" onsubmit="sendRushRequest(); return false;">
+        <form id="rushForm" class="form-horizontal">
             <div class="control-group">
                 <label class="control-label" for="inputURL">URL</label>
                 <div class="controls">
-                    <input type="text" id="inputURL" placeholder="URL">
-
+                    <input class="span6" type="text" id="inputURL" placeholder="URL" required>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label" for="inputQueues">Queues</label>
                 <div class="controls">
-                    <input type="text" id="inputQueues" placeholder="Queues">
+                    <input class="span6" type="text" id="inputQueues" placeholder="Queues" required>
                     <span class="help-block">Separated by commas</span>
                 </div>
             </div>
             <div class="control-group">
                 <div class="controls">
-                    <button type="submit" class="btn">Submit</button>
+                    <button id="sendReqBtnRush" type="submit" class="btn" data-loading-text="Loading...">Submit</button>
                 </div>
             </div>
         </form>
 
+        <div id="alertOKRush" class="alert alert-success hidden">
+            <strong>OK!</strong> The petition was correctly received by the server and it's being processed right now
+        </div>
+
+        <div id="alertErrorRush" class="alert alert-error hidden">
+            <strong>Error!</strong> An error arises when the petition was being sent to Rush
+        </div>
+
     </div> <!-- /container -->
 
-    <div class="tab-pane" id="getPics">
+    <div class="tab-pane" id="getContent">
 
+        <h1>Get Content from PopBox</h1>
+        <p>Insert here the queue whose files you want to retrieve</p>
 
-
-        <h1>Get Pictures</h1>
-        <p><a onclick="sendPopBoxRequest()" >Click here to retrieve pictures from PopBox</a></p>
+        <form id="popBoxForm" class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label" for="inputURL">Queue</label>
+                <div class="controls">
+                    <input class="span3" type="text" id="inputQueue" placeholder="Queue" required>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <button id="sendReqBtnPopBox" type="submit" class="btn" data-loading-text="Loading...">Submit</button>
+                </div>
+            </div>
+        </form>
 
         <div class="container pics" id="picturesDiv"></div>
 
     </div>
 
+    <div class="tab-pane" id="errors">
+
+        <h1>List of Errors</h1>
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Direction</th>
+                <th>Queues</th>
+                <th>Error</th>
+            </tr>
+            </thead>
+            <tbody id="errorsTable"><tbody/>
+        </table>
+
+
+    </div>
+
     <div class="tab-pane" id="about">
 
-
-
         <h1>About</h1>
+        <p><strong>How it works?</strong> Rush is a proxy that retrieve files by you. PopBox is a Simple High-Performance High-Scalability Inbox Notification Service. When you insert a file, Rush retrieve this file and insert it into the indicated queues. Once the petition has been completed you are able to retrieve the file accessing PopBox.</p>
         <p>Telefonica I+D April 2013</p>
-        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
 
     </div>
 
@@ -110,74 +172,13 @@
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="http://code.jquery.com/jquery.js"></script>
 <script src="js/bootstrap.min.js"></script>
+<script src="js/logic.js"></script>
+
 
 <script>
 
-    function sendReq(url, method, headers, content, callback) {
-
-        var req;
-
-        try {
-
-            var proxyURL = "http://localhost:2001/";
-
-            req = new XMLHttpRequest();
-            req.open(method, proxyURL, true);
-
-            //Set headers
-            req.setRequestHeader('relayer-host', url);
-            for (var head in headers) {
-                req.setRequestHeader(head, headers[head]);
-            }
-
-            if (callback) {
-                req.onload = callback.bind({}, req);
-            }
-            req.send(content);
-
-        }catch (e) {
-            window.alert('An error arises when the petition was being sent');
-        }
-    }
-
-    function sendRushRequest() {
-        var url = 'http://localhost:3001';
-        var contentURL = document.getElementById('inputURL').value;
-        var headers = {};
-        headers['x-relayer-host'] = contentURL;
-        headers['x-relayer-encoding'] = 'base64';
-        headers['x-relayer-topic'] = 'POPBOX';
-
-        sendReq(url, 'GET', headers, '');
-    }
-
-    function sendPopBoxRequest() {
-
-        var url = 'http://localhost:5001/queue/Rush/pop';
-        var headers = {};
-        headers['accept'] = 'application/json';
-
-        var callback = function(req) {
-
-            var recData = JSON.parse(req.responseText);
-
-            for (var i = 0; i < recData.data.length; i++) {
-
-                var elem = document.createElement("img");
-                elem.setAttribute("src", "data:image/png;base64," + recData.data[i]);
-                //elem.setAttribute("height", "768");
-                //elem.setAttribute("width", "1024");
-                elem.setAttribute("alt", "Your picture");
-                document.getElementById("picturesDiv").appendChild(elem);
 
 
-                //console.log(i + ' - ' + recData.data[i]);
-            }
-        }
-
-        sendReq(url, 'POST', headers, '', callback);
-
-    }
 
 </script>
 
