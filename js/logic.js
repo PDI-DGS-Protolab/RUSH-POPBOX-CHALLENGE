@@ -271,8 +271,13 @@ function getErrors() {
 }
 
 //Main Script
-document.getElementById('files').addEventListener('change', handleFileSelect, false); //Charge URLs from a file
 getErrors();      //Subscribe to error events
+
+//Adapt Upload URLs Button
+$('#uploadURLsBtn').on('click', function() {
+  $('#fileURLsInput').click();
+});
+document.getElementById('fileURLsInput').addEventListener('change', handleFileSelect, false); //Charge URLs from a file
 
 //Rush form action on submit
 $('#rushForm').on('submit', function() {
@@ -306,6 +311,7 @@ $('#popBoxForm').on('submit', function(ev) {
 });
 
 //Check Errors Button action on click
+$('#files').change(handleFileSelect);
 $('#checkErrosBtn').on('click', function() {
   $('#errosListTab').addClass('active');
   $('#aboutTab').removeClass('active');
