@@ -77,19 +77,18 @@ function sendRushRequest() {
 
 }
 
-function sendPopBoxRequest() {
+function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
 
-  var queueInput = document.getElementById('inputQueue');
-  var queueID = queueInput.value;
-  var maxElementsInput = document.getElementById('inputMaxElements');
-  var maxElements = maxElementsInput.value || 1000;
-  var timeoutInput =  document.getElementById('inputTimeout');
-  var timeout = timeoutInput.value || 0;
-  var url = 'http://localhost:5001/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
+  var url;
   var headers = {};
+  timeout = (subscribe) ? 60 : timeout;
+  maxElements = (subscribe) ? 1 : maxElements;
+  url = 'http://localhost:5001/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
   headers['accept'] = 'application/json';
 
-  var callback = function(req) {
+  console.log(url);
+
+  var callbackHTTP = function(req) {
 
     var recData = JSON.parse(req.responseText);
 
@@ -127,48 +126,65 @@ function sendPopBoxRequest() {
         link.appendChild(img);
         div.appendChild(link);
       }
+
+
     } else {
-      $('#noTransPopBoxModal').modal('show');
+      if (!subscribe) {
+        $('#noTransPopBoxModal').modal('show');
+      }
     }
 
-    $('#sendReqBtnPopBox').button('reset');
+    if (callback) {
+      callback();
+    }
+
+    if (subscribe) {
+      sendPopBoxRequest(queueID, timeout, maxElements, subscribe);
+    }
+
   }
 
-  $('#sendReqBtnPopBox').button('loading');
+  sendReq(url, 'POST', headers, '', callbackHTTP);
+}
+
+function resetPopBoxFileds() {
+  var queueInput = document.getElementById('inputQueue');
+  var maxElementsInput = document.getElementById('inputMaxElements');
+  var timeoutInput =  document.getElementById('inputTimeout');
+
   queueInput.value = '';
   maxElementsInput.value = '';
   timeoutInput.value = '';
-  sendReq(url, 'POST', headers, '', callback);
-
 }
 
-$('#rushForm').on('submit', function() {
-  try {
-    sendRushRequest();
-  } catch (e) {
-    console.log(e);
-  } finally {
-    return false;
+function pop() {
+
+  var queueInput = document.getElementById('inputQueue');
+  var queueID = queueInput.value;
+  var maxElementsInput = document.getElementById('inputMaxElements');
+  var maxElements = maxElementsInput.value || 1000;
+  var timeoutInput =  document.getElementById('inputTimeout');
+  var timeout = timeoutInput.value || 0;
+
+  $('#popBtn').button('loading');
+  resetPopBoxFileds();
+
+  var callback = function() {
+    $('#popBtn').button('reset');
   }
 
-});
+  sendPopBoxRequest(queueID, timeout, maxElements, false, callback);
+}
 
-$('#popBoxForm').on('submit', function() {
-  try {
-    sendPopBoxRequest();
-  } catch (e) {
-    console.log(e);
-  } finally {
-    return false;
-  }
-});
+function subscribe() {
 
-$('#checkErrosBtn').on('click', function() {
-  $('#errosListTab').addClass('active');
-  $('#aboutTab').removeClass('active');
-  $('#sendReqTab').removeClass('active');
-  $('#getContentTab').removeClass('active');
-});
+  var queueInput = document.getElementById('inputQueue');
+  var queueID = queueInput.value;
+
+  resetPopBoxFileds();
+
+  sendPopBoxRequest(queueID, 60, 1, true);
+}
 
 //Load Rush errors from PopBox
 function getErrors() {
@@ -234,6 +250,41 @@ function getErrors() {
 
 getErrors();
 
+$('#rushForm').on('submit', function() {
+  try {
+    sendRushRequest();
+  } catch (e) {
+    console.log(e);
+  } finally {
+    return false;
+  }
+
+});
+
+$('#popBoxForm').on('submit', function(ev) {
+
+  var checkBox = document.getElementById('subscribeCheckBox');
+
+  try {
+    if (checkBox.checked) {
+      subscribe();
+    } else {
+      pop();
+    }
+  } catch (e) {
+
+  }
+
+  checkBox.checked = false;
+  return false;
+});
+
+$('#checkErrosBtn').on('click', function() {
+  $('#errosListTab').addClass('active');
+  $('#aboutTab').removeClass('active');
+  $('#sendReqTab').removeClass('active');
+  $('#getContentTab').removeClass('active');
+});
 
 
 
