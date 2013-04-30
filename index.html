@@ -83,9 +83,9 @@
 
         <form id="rushForm" class="form-horizontal">
             <div class="control-group">
-                <label class="control-label" for="inputURL">URL</label>
+                <label class="control-label" for="textAreaURL">URLs</label>
                 <div class="controls">
-                    <input class="span6" type="text" id="inputURL" placeholder="URL" required>
+                    <textarea id="textAreaURLs" rows="10" class="span6" placeholder="URLs" required="required"></textarea>
                 </div>
             </div>
             <div class="control-group">
@@ -102,12 +102,11 @@
             </div>
         </form>
 
-        <div id="alertOKRush" class="alert alert-success hidden">
-            <strong>OK!</strong> The petition was correctly received by the server and it's being processed right now
-        </div>
-
-        <div id="alertErrorRush" class="alert alert-error hidden">
-            <strong>Error!</strong> An error arises when the petition was being sent to Rush
+        <div id="alertRush" class="alert hidden">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <strong>The petitions have been sent and they're being processing by Rush now</strong>
+            <p id="alertRushCompleted" style="margin: 0 0 0px;"></p>
+            <p id="alertRushErrored" style="margin: 0 0 0px;"></p>
         </div>
 
     </div> <!-- /container -->

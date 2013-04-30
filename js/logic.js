@@ -26,45 +26,54 @@ function sendReq(url, method, headers, content, callback) {
 }
 
 function sendRushRequest() {
-  var url = 'http://localhost:3001';
-  var inputURL = document.getElementById('inputURL');
+
+
+  var proxyURL = 'http://localhost:3001'
+  var textAreaURLs = document.getElementById('textAreaURLs');
   var inputQueues = document.getElementById('inputQueues');
-  var contentURL = inputURL.value;
+  var urls = textAreaURLs.value.split('\n');
   var queuesObj = [];
   var queues = inputQueues.value.split(',');
-  var headers = {};
+  var total = 0, completed = 0, errored = 0;
 
   for (var i = 0; i < queues.length; i++){
     var queueWithoutSpaces = queues[i].split(' ').join('');
     queuesObj.push({id: queueWithoutSpaces});
   }
 
-  headers['x-relayer-host'] = contentURL;
-  headers['x-relayer-encoding'] = 'base64';
-  headers['x-relayer-topic'] = JSON.stringify(queuesObj);
+  for (var i = 0; i < urls.length; i++) {
 
-  var callback = function(req) {
-    var parsed = JSON.parse(req.responseText);
+    var headers = {};
 
-    $('#sendReqBtnRush').button('reset');
+    headers['x-relayer-host'] = urls[i];
+    headers['x-relayer-encoding'] = 'base64';
+    headers['x-relayer-topic'] = JSON.stringify(queuesObj);
 
-    if (parsed.ok === true) {
-      $('#alertOKRush').removeClass('hidden');
-      setTimeout(function() {
-        $('#alertOKRush').addClass('hidden');
-      }, 5000);
-    } else {
-      $('#alertErrorRush').removeClass('hidden');
-      setTimeout(function() {
-        $('#alertErrorRush').addClass('hidden');
-      }, 3000);
+    var callback = function(req) {
+      var parsed = JSON.parse(req.responseText);
+
+      total++;
+
+      if (parsed.ok === true) {
+        completed++;
+      } else {
+        errored++;
+      }
+
+      if (total === urls.length) {
+        $('#sendReqBtnRush').button('reset');
+        $('#alertRush').removeClass('hidden');
+        $('#alertRushCompleted').text('Completed: ' + completed);
+        $('#alertRushErrored').text('Errored: ' + errored);
+      }
     }
+
+    sendReq(proxyURL, 'GET', headers, '', callback);
   }
 
   $('#sendReqBtnRush').button('loading');
-  inputURL.value = '';
+  textAreaURLs.value = '';
   inputQueues.value = '';
-  sendReq(url, 'GET', headers, '', callback);
 
 }
 
