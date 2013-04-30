@@ -45,7 +45,7 @@ function sendRushRequest() {
 
     var headers = {};
 
-    headers['x-relayer-host'] = urls[i];
+    headers['x-relayer-host'] = urls[i] + '#' + Math.random();  //Avoid cache
     headers['x-relayer-encoding'] = 'base64';
     headers['x-relayer-topic'] = JSON.stringify(queuesObj);
 
