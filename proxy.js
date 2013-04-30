@@ -4,49 +4,30 @@ var url = require('url');
 
 http.createServer(function (clientReq, clientRes) {
 
-  var clientData = '';
+  //Headers required by the browser
+  clientRes.setHeader('Access-Control-Allow-Origin', '*');
+  if (clientReq.headers['access-control-request-headers']) {  //OPTIONS
+    clientRes.setHeader('Access-Control-Allow-Headers', clientReq.headers['access-control-request-headers']);
+  }
 
-  clientReq.on('data', function(chunk) {
-    clientData += chunk;
-  });
+  if(clientReq.headers['relayer-host']) {
 
-  clientReq.on('end', function () {
+    var options = url.parse(clientReq.headers['relayer-host']);
+    options.method = clientReq.method;
 
-    //Headers required by the browser
-    clientRes.setHeader('Access-Control-Allow-Origin', '*');
-    if (clientReq.headers['access-control-request-headers']) {  //OPTIONS
-      clientRes.setHeader('Access-Control-Allow-Headers', clientReq.headers['access-control-request-headers']);
-    }
+    //Set headers
+    options.headers = clientReq.headers;
+    delete options.headers['relayer-host'];
 
-    if(clientReq.headers['relayer-host']) {
+    var serverReq = http.request(options, function(serverRes){
+      serverRes.pipe(clientRes, { end: true });
+    });
 
-      var options = url.parse(clientReq.headers['relayer-host']);
-      options.method = clientReq.method;
+    clientReq.pipe(serverReq, { end: true });
 
-      //Set headers
-      options.headers = clientReq.headers;
-      delete options.headers['relayer-host'];
-
-      var serverReq = http.request(options, function(serverRes) {
-        var newData = '';
-
-        serverRes.on('data', function(chunk) {
-          newData += chunk;
-          //clientRes.write(chunk);
-        });
-
-        serverRes.on('end', function() {
-          clientRes.end(newData);
-          //clientRes.end();
-        });
-      });
-
-      serverReq.end(clientData);
-
-    } else {
-      clientRes.end();
-    }
-  });
+  } else {
+    clientRes.end();
+  }
 
 }).listen(2001, 'localhost');
 
