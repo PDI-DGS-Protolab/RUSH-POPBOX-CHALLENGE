@@ -1,9 +1,10 @@
 var http = require('http');
 var url = require('url');
+var express = require('express');
+var path = require('path');
 
 
-http.createServer(function (clientReq, clientRes) {
-
+var proxy = function(clientReq, clientRes) {
   //Headers required by the browser
   clientRes.setHeader('Access-Control-Allow-Origin', '*');
   if (clientReq.headers['access-control-request-headers']) {  //OPTIONS
@@ -32,8 +33,17 @@ http.createServer(function (clientReq, clientRes) {
   } else {
     clientRes.end();
   }
+};
 
-}).listen(2001, 'localhost');
+var server = express();
+server.port = 2001;
+
+//Config URL
+server.all('/proxy', proxy);
+server.use('/', express.static(path.dirname(module.filename)));
+
+//Start server
+server.listen(server.port);
 
 process.on('uncaughtException', function onUncaughtException(err) {
   console.log('Uncaught Exception: ' + err);

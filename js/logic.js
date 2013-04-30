@@ -4,7 +4,7 @@ function sendReq(url, method, headers, content, callback) {
 
   try {
 
-    var proxyURL = "http://localhost:2001/";
+    var proxyURL = "http://localhost:2001/proxy";
 
     req = new XMLHttpRequest();
     req.open(method, proxyURL, true);
@@ -21,7 +21,7 @@ function sendReq(url, method, headers, content, callback) {
     req.send(content);
 
   }catch (e) {
-    window.alert('An error arises when the petition was being sent');
+    console.log('Error processing the URL ' + e);
   }
 }
 

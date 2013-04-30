@@ -1,0 +1,35 @@
+{
+  "name": "Rush-PopBox-Challange",
+  "version": "0.0.1",
+  "author": {
+    "name": "OIL Telefonica"
+  },
+  "description": "",
+  "contributors": [
+    {
+      "name": "Aitor Magan",
+      "email": "amagan@conwet.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/PDI-DGS-Protolab/RUSH-POPBOX-CHALLENGE.git"
+  },
+  "dependencies": {
+    "express": "3.2.1"
+  },
+  "license": "AGPL",
+  "engine": {
+    "node": "0.10"
+  },
+  "_id": "performanceFramework@0.0.1",
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  },
+  "_engineSupported": true,
+  "_npmVersion": "1.2.17",
+  "_nodeVersion": "v0.10.3",
+  "_defaultsLoaded": true
+}
