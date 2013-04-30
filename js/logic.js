@@ -186,6 +186,28 @@ function subscribe() {
   sendPopBoxRequest(queueID, 60, 1, true);
 }
 
+//Charge URLS from a file
+function handleFileSelect(evt) {
+  var files = evt.target.files; // FileList object
+
+  // Loop through the FileList and render image files as thumbnails.
+  for (var i = 0, f; f = files[i]; i++) {
+
+    var reader = new FileReader();
+
+    // Closure to capture the file information.
+    reader.onload = (function(theFile) {
+      return function(e) {
+        var textAreaURLs = document.getElementById('textAreaURLs');
+        textAreaURLs.value += e.target.result;
+      };
+    })(f);
+
+    // Read in the image file as a data URL.
+    reader.readAsText(f);
+  }
+}
+
 //Load Rush errors from PopBox
 function getErrors() {
 
@@ -248,8 +270,11 @@ function getErrors() {
   sendReq(url, 'POST', headers, '', callback);
 }
 
-getErrors();
+//Main Script
+document.getElementById('files').addEventListener('change', handleFileSelect, false); //Charge URLs from a file
+getErrors();      //Subscribe to error events
 
+//Rush form action on submit
 $('#rushForm').on('submit', function() {
   try {
     sendRushRequest();
@@ -261,6 +286,7 @@ $('#rushForm').on('submit', function() {
 
 });
 
+//PopBox form action on submit
 $('#popBoxForm').on('submit', function(ev) {
 
   var checkBox = document.getElementById('subscribeCheckBox');
@@ -279,6 +305,7 @@ $('#popBoxForm').on('submit', function(ev) {
   return false;
 });
 
+//Check Errors Button action on click
 $('#checkErrosBtn').on('click', function() {
   $('#errosListTab').addClass('active');
   $('#aboutTab').removeClass('active');
