@@ -25,6 +25,10 @@ http.createServer(function (clientReq, clientRes) {
 
     clientReq.pipe(serverReq, { end: true });
 
+    clientReq.connection.addListener('close', function () {
+      serverReq.abort();
+    });
+
   } else {
     clientRes.end();
   }

@@ -81,7 +81,11 @@ function sendPopBoxRequest() {
 
   var queueInput = document.getElementById('inputQueue');
   var queueID = queueInput.value;
-  var url = 'http://localhost:5001/queue/' + queueID + '/pop';
+  var maxElementsInput = document.getElementById('inputMaxElements');
+  var maxElements = maxElementsInput.value || 1000;
+  var timeoutInput =  document.getElementById('inputTimeout');
+  var timeout = timeoutInput.value || 0;
+  var url = 'http://localhost:5001/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
   var headers = {};
   headers['accept'] = 'application/json';
 
@@ -132,6 +136,8 @@ function sendPopBoxRequest() {
 
   $('#sendReqBtnPopBox').button('loading');
   queueInput.value = '';
+  maxElementsInput.value = '';
+  timeoutInput.value = '';
   sendReq(url, 'POST', headers, '', callback);
 
 }
@@ -194,6 +200,13 @@ function getErrors() {
           }
         }
 
+        var errorMsg;
+        if (error.statusCode) {
+          errorMsg = error.statusCode + ' - ' + error.errorMsg;
+        } else {
+          errorMsg = error.errorMsg;
+        }
+
         var elem = document.createElement("tr");
         elem.setAttribute('class', 'error');
         var direction = document.createElement("td");
@@ -201,7 +214,7 @@ function getErrors() {
         var queuesTd = document.createElement("td");
         queuesTd.appendChild(document.createTextNode(queuesTxt));
         var errorTd = document.createElement("td");
-        errorTd.appendChild(document.createTextNode(error.statusCode + ' - ' + error.errorMsg));
+        errorTd.appendChild(document.createTextNode(errorMsg));
 
         elem.setAttribute("style","cursor: pointer");
         elem.appendChild(direction);

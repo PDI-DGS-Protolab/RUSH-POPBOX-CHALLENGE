@@ -83,7 +83,7 @@
 
         <form id="rushForm" class="form-horizontal">
             <div class="control-group">
-                <label class="control-label" for="textAreaURL">URLs</label>
+                <label class="control-label" for="textAreaURLs">URLs</label>
                 <div class="controls">
                     <textarea id="textAreaURLs" rows="10" class="span6" placeholder="URLs" required="required"></textarea>
                 </div>
@@ -118,9 +118,21 @@
 
         <form id="popBoxForm" class="form-horizontal">
             <div class="control-group">
-                <label class="control-label" for="inputURL">Queue</label>
+                <label class="control-label" for="inputQueue">Queue</label>
                 <div class="controls">
                     <input class="span3" type="text" id="inputQueue" placeholder="Queue" required>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputMaxElements">Max Elements</label>
+                <div class="controls">
+                    <input class="span3" type="text" id="inputMaxElements" placeholder="Max Elements">
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="inputTimeout">Timeout</label>
+                <div class="controls">
+                    <input class="span3" type="text" id="inputTimeout" placeholder="Timeout (seconds)">
                 </div>
             </div>
             <div class="control-group">
