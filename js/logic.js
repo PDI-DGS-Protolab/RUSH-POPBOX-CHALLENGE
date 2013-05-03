@@ -4,13 +4,12 @@ function sendRequestThroughProxy(url, method, headers, content, callback) {
 
   try {
 
-    var proxyURL = "http://localhost:2001/proxy";
+    var proxyURL = "http://localhost:2001/" + url;
 
     req = new XMLHttpRequest();
     req.open(method, proxyURL, true);
 
     //Set headers
-    req.setRequestHeader('relayer-host', url);
     for (var head in headers) {
       req.setRequestHeader(head, headers[head]);
     }
@@ -28,7 +27,7 @@ function sendRequestThroughProxy(url, method, headers, content, callback) {
 function sendRushRequest() {
 
 
-  var rushURL = 'http://localhost:3001'
+  var rushPah = 'rush'
   var textAreaURLs = document.getElementById('textAreaURLs');
   var inputQueues = document.getElementById('inputQueues');
   var urls = textAreaURLs.value.split('\n');
@@ -68,7 +67,7 @@ function sendRushRequest() {
       }
     }
 
-    sendRequestThroughProxy(rushURL, 'GET', headers, '', callback);
+    sendRequestThroughProxy(rushPah, 'GET', headers, '', callback);
   }
 
   $('#sendReqBtnRush').button('loading');
@@ -79,12 +78,12 @@ function sendRushRequest() {
 
 function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
 
-  var popBoxURL;
+  var popBoxPath;
   var headers = {};
 
   timeout = (subscribe) ? 60 : timeout;
   maxElements = (subscribe) ? 1 : maxElements;
-  popBoxURL = 'http://localhost:5001/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
+  popBoxPath = 'popbox/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
   headers['accept'] = 'application/json';
 
   var callbackHTTP = function(req) {
@@ -143,7 +142,7 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
 
   }
 
-  sendRequestThroughProxy(popBoxURL, 'POST', headers, '', callbackHTTP);
+  sendRequestThroughProxy(popBoxPath, 'POST', headers, '', callbackHTTP);
 }
 
 function resetPopBoxFileds() {
@@ -213,7 +212,7 @@ function handleFileSelect(evt) {
 //Load Rush errors from PopBox
 function getErrors() {
 
-  var popBoxErrorsURL = 'http://localhost:5001/queue/RushErrors/pop?timeout=60';
+  var popBoxErrorsPath = 'popbox/queue/RushErrors/pop?timeout=60';
   var headers = {};
   headers['accept'] = 'application/json';
 
@@ -231,6 +230,7 @@ function getErrors() {
         var queuesTxt = '';
         var queues = JSON.parse(error.queues);
         var errorMsg;
+        var direction;
 
         for (var i = 0; i < queues.length; i++) {
 
@@ -247,10 +247,13 @@ function getErrors() {
           errorMsg = error.errorMsg;
         }
 
+        var indexSharp = error.dir.lastIndexOf('#');
+        direction = error.dir.substring(0, indexSharp);
+
         var tableRow = document.createElement("tr");
         tableRow.setAttribute('class', 'error');
         var directionTd = document.createElement("td");
-        directionTd.appendChild(document.createTextNode(error.dir));
+        directionTd.appendChild(document.createTextNode(direction));
         var queuesTd = document.createElement("td");
         queuesTd.appendChild(document.createTextNode(queuesTxt));
         var errorTd = document.createElement("td");
@@ -269,7 +272,7 @@ function getErrors() {
     setTimeout(getErrors, 0);
   }
 
-  sendRequestThroughProxy(popBoxErrorsURL, 'POST', headers, '', callback);
+  sendRequestThroughProxy(popBoxErrorsPath, 'POST', headers, '', callback);
 }
 
 //MAIN SCRIPT
