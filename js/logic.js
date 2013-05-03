@@ -1,3 +1,10 @@
+// Array Remove - By John Resig (MIT Licensed)
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from < 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
+
 function sendRequestThroughProxy(url, method, headers, content, callback) {
 
   var req;
@@ -35,11 +42,13 @@ function sendRushRequest() {
   var queues = inputQueues.value.split(',');
   var total = 0, completed = 0, errored = 0;
 
+  //Get queue name
   for (var i = 0; i < queues.length; i++){
     var queueWithoutSpaces = queues[i].split(' ').join('');
     queuesObj.push({id: queueWithoutSpaces});
   }
 
+  //One Request by URL
   for (var i = 0; i < urls.length; i++) {
 
     var headers = {};
@@ -86,6 +95,39 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
   popBoxPath = 'popbox/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
   headers['accept'] = 'application/json';
 
+  var div = document.getElementById('queue' + queueID);
+
+  //If the div element does not exist, it's created
+  if (!div) {
+    div = document.createElement('div');
+    div.setAttribute('id', 'queue' + queueID);
+    div.setAttribute('class', 'hero-unit');
+    div.setAttribute('style', 'padding: 20px;')
+
+    var h2 = document.createElement('h2');
+    h2.appendChild(document.createTextNode('Queue ' + queueID));
+
+    var btn = document.createElement('button');
+    btn.setAttribute('id', 'unsubscribe' + queueID);
+    btn.setAttribute('type', 'button');
+    btn.setAttribute('class', 'close hidden');
+    btn.setAttribute('aria-hidden', 'true');
+    btn.appendChild(document.createTextNode('Unsubscribe'));
+
+    btn.onclick = function() {
+      subscriptionsToBeClosed.push(queueID);
+      $('#unsubscribe' + queueID).addClass('hidden');
+    }
+
+    div.appendChild(btn);
+    div.appendChild(h2);
+    document.getElementById('picturesDiv').appendChild(div);
+  }
+
+  if (subscribe) {
+    $('#unsubscribe' + queueID).removeClass('hidden');
+  }
+
   var callbackHTTP = function(req) {
 
     var receivedData = JSON.parse(req.responseText);
@@ -93,22 +135,6 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
     if (receivedData.data.length > 0) {
 
       for (var i = 0; i < receivedData.data.length; i++) {
-
-        var div = document.getElementById('queue' + queueID);
-
-        //If the div element does not exist, it's created
-        if (!div) {
-          div = document.createElement('div');
-          div.setAttribute('id', 'queue' + queueID);
-          div.setAttribute('class', 'hero-unit');
-          div.setAttribute('style', 'padding: 20px;')
-
-          var h2 = document.createElement('h2');
-          h2.appendChild(document.createTextNode('Queue ' + queueID));
-
-          div.appendChild(h2);
-          document.getElementById('picturesDiv').appendChild(div);
-        }
 
         var link = document.createElement('a');
         var img = document.createElement("img");
@@ -136,10 +162,12 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
       callback();
     }
 
-    if (subscribe) {
+    var indexOfQueue = subscriptionsToBeClosed.indexOf(queueID);
+    if (subscribe && indexOfQueue === -1) {
       sendPopBoxRequest(queueID, timeout, maxElements, subscribe);
+    } else if (subscribe) {
+      subscriptionsToBeClosed.remove(indexOfQueue, indexOfQueue);
     }
-
   }
 
   sendRequestThroughProxy(popBoxPath, 'POST', headers, '', callbackHTTP);
@@ -316,6 +344,9 @@ $('#popBoxForm').on('submit', function(ev) {
   checkBox.checked = false;
   return false;
 });
+
+//Subscriptions to be closed
+var subscriptionsToBeClosed = [];
 
 //Check Errors Button action on click
 $('#files').change(handleFileSelect);
