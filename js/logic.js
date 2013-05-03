@@ -1,4 +1,4 @@
-function sendReq(url, method, headers, content, callback) {
+function sendRequestThroughProxy(url, method, headers, content, callback) {
 
   var req;
 
@@ -21,14 +21,14 @@ function sendReq(url, method, headers, content, callback) {
     req.send(content);
 
   }catch (e) {
-    console.log('Error processing the URL ' + e);
+    console.log(e);
   }
 }
 
 function sendRushRequest() {
 
 
-  var proxyURL = 'http://localhost:3001'
+  var rushURL = 'http://localhost:3001'
   var textAreaURLs = document.getElementById('textAreaURLs');
   var inputQueues = document.getElementById('inputQueues');
   var urls = textAreaURLs.value.split('\n');
@@ -50,8 +50,8 @@ function sendRushRequest() {
     headers['x-relayer-topic'] = JSON.stringify(queuesObj);
 
     var callback = function(req) {
-      var parsed = JSON.parse(req.responseText);
 
+      var parsed = JSON.parse(req.responseText);
       total++;
 
       if (parsed.ok === true) {
@@ -68,7 +68,7 @@ function sendRushRequest() {
       }
     }
 
-    sendReq(proxyURL, 'GET', headers, '', callback);
+    sendRequestThroughProxy(rushURL, 'GET', headers, '', callback);
   }
 
   $('#sendReqBtnRush').button('loading');
@@ -79,25 +79,25 @@ function sendRushRequest() {
 
 function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
 
-  var url;
+  var popBoxURL;
   var headers = {};
+
   timeout = (subscribe) ? 60 : timeout;
   maxElements = (subscribe) ? 1 : maxElements;
-  url = 'http://localhost:5001/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
+  popBoxURL = 'http://localhost:5001/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
   headers['accept'] = 'application/json';
-
-  console.log(url);
 
   var callbackHTTP = function(req) {
 
-    var recData = JSON.parse(req.responseText);
+    var receivedData = JSON.parse(req.responseText);
 
-    if (recData.data.length > 0) {
+    if (receivedData.data.length > 0) {
 
-      for (var i = 0; i < recData.data.length; i++) {
+      for (var i = 0; i < receivedData.data.length; i++) {
 
         var div = document.getElementById('queue' + queueID);
 
+        //If the div element does not exist, it's created
         if (!div) {
           div = document.createElement('div');
           div.setAttribute('id', 'queue' + queueID);
@@ -115,18 +115,17 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
         var img = document.createElement("img");
 
         //Link
-        link.setAttribute('href', 'data:image/png;base64,' + recData.data[i]);
+        link.setAttribute('href', 'data:image/png;base64,' + receivedData.data[i]);
         link.setAttribute('target', '_blank');
 
         //Image
-        img.setAttribute('src', 'data:image/png;base64,' + recData.data[i]);
+        img.setAttribute('src', 'data:image/png;base64,' + receivedData.data[i]);
         img.setAttribute('style', 'height: 75px');
         img.setAttribute('alt', 'Your picture');
 
         link.appendChild(img);
         div.appendChild(link);
       }
-
 
     } else {
       if (!subscribe) {
@@ -144,7 +143,7 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
 
   }
 
-  sendReq(url, 'POST', headers, '', callbackHTTP);
+  sendRequestThroughProxy(popBoxURL, 'POST', headers, '', callbackHTTP);
 }
 
 function resetPopBoxFileds() {
@@ -186,11 +185,11 @@ function subscribe() {
   sendPopBoxRequest(queueID, 60, 1, true);
 }
 
-//Charge URLS from a file
+//Load URLS from a file
 function handleFileSelect(evt) {
   var files = evt.target.files; // FileList object
 
-  // Loop through the FileList and render image files as thumbnails.
+  // Loop through the FileList and show file content in the text area
   for (var i = 0, f; f = files[i]; i++) {
 
     var reader = new FileReader();
@@ -203,15 +202,18 @@ function handleFileSelect(evt) {
       };
     })(f);
 
-    // Read in the image file as a data URL.
+    // Read the file as text
     reader.readAsText(f);
+
+    //Show the file that has been read
+    $('#filePath').text(f.name);
   }
 }
 
 //Load Rush errors from PopBox
 function getErrors() {
 
-  var url = 'http://localhost:5001/queue/RushErrors/pop?timeout=60';
+  var popBoxErrorsURL = 'http://localhost:5001/queue/RushErrors/pop?timeout=60';
   var headers = {};
   headers['accept'] = 'application/json';
 
@@ -224,10 +226,11 @@ function getErrors() {
       $('#errorModal').modal('show');
 
       for (var i = 0; i < errors.data.length; i++) {
-        var error = JSON.parse(errors.data[i]);
 
+        var error = JSON.parse(errors.data[i]);
         var queuesTxt = '';
         var queues = JSON.parse(error.queues);
+        var errorMsg;
 
         for (var i = 0; i < queues.length; i++) {
 
@@ -238,28 +241,27 @@ function getErrors() {
           }
         }
 
-        var errorMsg;
         if (error.statusCode) {
           errorMsg = error.statusCode + ' - ' + error.errorMsg;
         } else {
           errorMsg = error.errorMsg;
         }
 
-        var elem = document.createElement("tr");
-        elem.setAttribute('class', 'error');
-        var direction = document.createElement("td");
-        direction.appendChild(document.createTextNode(error.dir));
+        var tableRow = document.createElement("tr");
+        tableRow.setAttribute('class', 'error');
+        var directionTd = document.createElement("td");
+        directionTd.appendChild(document.createTextNode(error.dir));
         var queuesTd = document.createElement("td");
         queuesTd.appendChild(document.createTextNode(queuesTxt));
         var errorTd = document.createElement("td");
         errorTd.appendChild(document.createTextNode(errorMsg));
 
-        elem.setAttribute("style","cursor: pointer");
-        elem.appendChild(direction);
-        elem.appendChild(queuesTd);
-        elem.appendChild(errorTd);
+        tableRow.setAttribute("style","cursor: pointer");
+        tableRow.appendChild(directionTd);
+        tableRow.appendChild(queuesTd);
+        tableRow.appendChild(errorTd);
 
-        document.getElementById("errorsTable").appendChild(elem);
+        document.getElementById("errorsTable").appendChild(tableRow);
       }
     }
 
@@ -267,17 +269,19 @@ function getErrors() {
     setTimeout(getErrors, 0);
   }
 
-  sendReq(url, 'POST', headers, '', callback);
+  sendRequestThroughProxy(popBoxErrorsURL, 'POST', headers, '', callback);
 }
 
-//Main Script
+//MAIN SCRIPT
 getErrors();      //Subscribe to error events
 
 //Adapt Upload URLs Button
 $('#uploadURLsBtn').on('click', function() {
   $('#fileURLsInput').click();
 });
-document.getElementById('fileURLsInput').addEventListener('change', handleFileSelect, false); //Charge URLs from a file
+
+//Load URLs from a file
+document.getElementById('fileURLsInput').addEventListener('change', handleFileSelect, false);
 
 //Rush form action on submit
 $('#rushForm').on('submit', function() {
