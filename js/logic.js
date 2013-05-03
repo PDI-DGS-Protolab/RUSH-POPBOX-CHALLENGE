@@ -101,7 +101,7 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
   if (!div) {
     div = document.createElement('div');
     div.setAttribute('id', 'queue' + queueID);
-    div.setAttribute('class', 'hero-unit');
+    div.setAttribute('class', 'hero-unit hidden');
     div.setAttribute('style', 'padding: 20px;')
 
     var h2 = document.createElement('h2');
@@ -125,6 +125,7 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
   }
 
   if (subscribe) {
+    $('#queue' + queueID).removeClass('hidden');
     $('#unsubscribe' + queueID).removeClass('hidden');
   }
 
@@ -133,6 +134,8 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
     var receivedData = JSON.parse(req.responseText);
 
     if (receivedData.data.length > 0) {
+
+      $('#queue' + queueID).removeClass('hidden');
 
       for (var i = 0; i < receivedData.data.length; i++) {
 
