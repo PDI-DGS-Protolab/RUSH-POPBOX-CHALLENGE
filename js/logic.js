@@ -1,9 +1,22 @@
+//AUXILIARY FUNCTIONS
 // Array Remove - By John Resig (MIT Licensed)
 Array.prototype.remove = function(from, to) {
   var rest = this.slice((to || from) + 1 || this.length);
   this.length = from < 0 ? this.length + from : from;
   return this.push.apply(this, rest);
 };
+
+//UUID generator
+function s4() {
+  return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+};
+
+function guid() {
+  return s4() + s4() + '' + s4() + '' + s4() + '' +
+      s4() + '' + s4() + s4() + s4();
+}
 
 function sendRequestThroughProxy(url, method, headers, content, callback) {
 
@@ -45,6 +58,7 @@ function sendRushRequest() {
     var queueWithoutSpaces = queues[i].split(' ').join('');
     queuesObj.push({id: queueWithoutSpaces});
   }
+  queuesObj.push({errorID: uuid});
 
   //One Request by URL
   for (var i = 0; i < urls.length; i++) {
@@ -261,7 +275,7 @@ function insertError(dir, queues, errorMsg) {
 //Load Rush errors from PopBox
 function getErrors() {
 
-  var popBoxErrorsPath = 'popbox/queue/RushErrors/pop?timeout=60';
+  var popBoxErrorsPath = 'popbox/queue/RushErrors' + uuid + '/pop?timeout=60';
   var headers = {};
   headers['accept'] = 'application/json';
 
@@ -277,7 +291,7 @@ function getErrors() {
 
         var error = JSON.parse(errors.data[i]);
         var queuesTxt = '';
-        var queues = JSON.parse(error.queues);
+        var queues = error.queues;
         var errorMsg;
         var direction;
 
@@ -311,7 +325,8 @@ function getErrors() {
 }
 
 //MAIN SCRIPT
-getErrors();      //Subscribe to error events
+var uuid = guid();  //Error queue ID
+getErrors();        //Subscribe to error events
 
 //Adapt Upload URLs Button
 $('#uploadURLsBtn').on('click', function() {

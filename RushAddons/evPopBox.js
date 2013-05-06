@@ -18,6 +18,12 @@ var http = require('http');
 var logger = log.newLogger();
 logger.prefix = path.basename(module.filename, '.js');
 
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from < 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
+
 function sendReq(trans) {
 
   var options = {
@@ -60,12 +66,20 @@ function init(emitter) {
   return function(callback) {
     emitter.on(MG.EVENT_NEWSTATE, function onNewEvent(data) {
 
-
-
       var trans =  {
         'priority': 'L',
         'expirationDate': Math.round(new Date().getTime() / 1000 + 3600)
       };
+
+      var queues = JSON.parse(data.topic);
+      var queueErrorID;
+
+      for (var i = 0; i < queues.length; i++) {
+        if (queues[i].errorID) {
+          queueErrorID = queues[i].errorID;
+          queues.remove(i, i);
+        }
+      }
 
       if (data.state === MG.STATE_COMPLETED) {
 
@@ -74,7 +88,7 @@ function init(emitter) {
 
         trans.payload = message;
         trans.encoding = encoding;
-        trans.queue = JSON.parse(data.topic);
+        trans.queue = queues;
 
         sendReq(trans);
 
@@ -83,12 +97,12 @@ function init(emitter) {
 
         var result = {};
         result.dir = data.task.headers[MG.HEAD_RELAYER_HOST];
-        result.queues = data.task.headers[MG.HEAD_RELAYER_TOPIC];
+        result.queues = queues;
         result.statusCode = data.result.statusCode;
         result.errorMsg = data.result.error;
 
         trans.payload = JSON.stringify(result);
-        trans.queue = [{id: 'RushErrors'}];
+        trans.queue = [{id: 'RushErrors' + queueErrorID}];
 
         sendReq(trans);
       }
