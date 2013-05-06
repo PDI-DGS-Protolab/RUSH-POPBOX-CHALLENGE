@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Le styles -->
+    <!-- CSS -->
     <link href="css/bootstrap.css" rel="stylesheet">
     <style>
         body {
@@ -20,7 +20,8 @@
 
 <body>
 
-<div id="noTransPopBoxModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<!-- MODALS -->
+<div id="noTransPopBoxModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="noTransPopBoxLabel" aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         <h3 id="noTransPopBoxLabel">Empty Queue!!!</h3>
@@ -35,10 +36,10 @@
     </div>
 </div>
 
-<div id="errorModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div id="errorModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="errorLabel" aria-hidden="true">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="errorLabel">Empty Queue!!!</h3>
+        <h3 id="errorLabel">Error!!!</h3>
     </div>
     <div class="modal-body">
         <div class="alert alert-error">
@@ -47,10 +48,11 @@
     </div>
     <div class="modal-footer">
         <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-        <button id="checkErrosBtn" data-toggle="tab" href="#errors" class="btn btn-danger" data-dismiss="modal" aria-hidden="true">Check Errors</button>
+        <a id="checkErrorsBtn" class="btn btn-danger" href="#errors" data-toggle="tab" data-dismiss="modal" aria-hidden="true">Check Errors</a>
     </div>
 </div>
 
+<!-- BOOTSTRAP NAV BAR -->
 <div class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-inner">
         <div class="container">
@@ -72,8 +74,10 @@
     </div>
 </div>
 
+<!-- TABS -->
 <div class="container tab-content">
 
+    <!-- Rus Tab -->
     <div class="tab-pane active" id="SendReq">
 
         <h1>Send Request to Rush</h1>
@@ -112,8 +116,9 @@
             <p id="alertRushErrored" style="margin: 0 0 0px;"></p>
         </div>
 
-    </div> <!-- /container -->
+    </div>
 
+    <!-- PopBox Tab -->
     <div class="tab-pane" id="getContent">
 
         <h1>Get Content from PopBox</h1>
@@ -154,6 +159,7 @@
 
     </div>
 
+    <!-- Errors Tab -->
     <div class="tab-pane" id="errors">
 
         <h1>List of Errors</h1>
@@ -166,12 +172,11 @@
                 <th>Error</th>
             </tr>
             </thead>
-            <tbody id="errorsTable"><tbody/>
+            <tbody id="errorsTable"></tbody>
         </table>
-
-
     </div>
 
+    <!-- Abount Tab -->
     <div class="tab-pane" id="about">
 
         <h1>About</h1>
@@ -180,26 +185,14 @@
 
     </div>
 
-
-
 </div>
 
 
 
-<!-- Le javascript
-================================================== -->
-<!-- Placed at the end of the document so the pages load faster -->
+<!-- JAVASCRIPT -->
 <script src="http://code.jquery.com/jquery.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/logic.js"></script>
-
-
-<script>
-
-
-
-
-</script>
 
 </body>
 </html>

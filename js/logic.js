@@ -7,13 +7,11 @@ Array.prototype.remove = function(from, to) {
 
 function sendRequestThroughProxy(url, method, headers, content, callback) {
 
-  var req;
-
   try {
 
     var proxyURL = "http://localhost:2001/" + url;
+    var req = new XMLHttpRequest();
 
-    req = new XMLHttpRequest();
     req.open(method, proxyURL, true);
 
     //Set headers
@@ -24,6 +22,7 @@ function sendRequestThroughProxy(url, method, headers, content, callback) {
     if (callback) {
       req.onload = callback.bind({}, req);
     }
+
     req.send(content);
 
   }catch (e) {
@@ -33,8 +32,7 @@ function sendRequestThroughProxy(url, method, headers, content, callback) {
 
 function sendRushRequest() {
 
-
-  var rushPah = 'rush'
+  var rushPah = 'rush';
   var textAreaURLs = document.getElementById('textAreaURLs');
   var inputQueues = document.getElementById('inputQueues');
   var urls = textAreaURLs.value.split('\n');
@@ -57,7 +55,7 @@ function sendRushRequest() {
     headers['x-relayer-encoding'] = 'base64';
     headers['x-relayer-topic'] = JSON.stringify(queuesObj);
 
-    var callback = function(req) {
+    var callback = function(url, queues, req) {
 
       var parsed = JSON.parse(req.responseText);
       total++;
@@ -66,6 +64,7 @@ function sendRushRequest() {
         completed++;
       } else {
         errored++;
+        insertError(url, queues, parsed.errors.pop());
       }
 
       if (total === urls.length) {
@@ -74,7 +73,7 @@ function sendRushRequest() {
         $('#alertRushCompleted').text('Completed: ' + completed);
         $('#alertRushErrored').text('Errored: ' + errored);
       }
-    }
+    }.bind({}, urls[i], inputQueues.value);
 
     sendRequestThroughProxy(rushPah, 'GET', headers, '', callback);
   }
@@ -240,6 +239,25 @@ function handleFileSelect(evt) {
   }
 }
 
+function insertError(dir, queues, errorMsg) {
+
+  var tableRow = document.createElement("tr");
+  tableRow.setAttribute('class', 'error');
+  var directionTd = document.createElement("td");
+  directionTd.appendChild(document.createTextNode(dir));
+  var queuesTd = document.createElement("td");
+  queuesTd.appendChild(document.createTextNode(queues));
+  var errorTd = document.createElement("td");
+  errorTd.appendChild(document.createTextNode(errorMsg));
+
+  tableRow.appendChild(directionTd);
+  tableRow.appendChild(queuesTd);
+  tableRow.appendChild(errorTd);
+
+  document.getElementById("errorsTable").appendChild(tableRow);
+
+}
+
 //Load Rush errors from PopBox
 function getErrors() {
 
@@ -281,21 +299,7 @@ function getErrors() {
         var indexSharp = error.dir.lastIndexOf('#');
         direction = error.dir.substring(0, indexSharp);
 
-        var tableRow = document.createElement("tr");
-        tableRow.setAttribute('class', 'error');
-        var directionTd = document.createElement("td");
-        directionTd.appendChild(document.createTextNode(direction));
-        var queuesTd = document.createElement("td");
-        queuesTd.appendChild(document.createTextNode(queuesTxt));
-        var errorTd = document.createElement("td");
-        errorTd.appendChild(document.createTextNode(errorMsg));
-
-        tableRow.setAttribute("style","cursor: pointer");
-        tableRow.appendChild(directionTd);
-        tableRow.appendChild(queuesTd);
-        tableRow.appendChild(errorTd);
-
-        document.getElementById("errorsTable").appendChild(tableRow);
+        insertError(direction, queuesTxt, errorMsg);
       }
     }
 
@@ -352,14 +356,9 @@ $('#popBoxForm').on('submit', function(ev) {
 var subscriptionsToBeClosed = [];
 
 //Check Errors Button action on click
-$('#files').change(handleFileSelect);
-$('#checkErrosBtn').on('click', function() {
+$('#checkErrorsBtn').on('click', function() {
   $('#errosListTab').addClass('active');
   $('#aboutTab').removeClass('active');
   $('#sendReqTab').removeClass('active');
   $('#getContentTab').removeClass('active');
 });
-
-
-
-
