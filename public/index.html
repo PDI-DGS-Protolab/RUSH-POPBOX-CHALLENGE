@@ -89,6 +89,7 @@
                 <div class="controls">
                     <textarea id="textAreaURLs" rows="10" class="span6" placeholder="URLs" required="required"></textarea>
                     <span class="help-block">
+                        <p>One URL per line</p>
                         <a class="btn" id="uploadURLsBtn">Load URLs from a file</a>
                         <span id="filePath"></span>
                         <input type="file" id="fileURLsInput" title="" class="hidden"/>
@@ -135,14 +136,14 @@
                 <label class="control-label" for="inputMaxElements">Max Elements</label>
                 <div class="controls">
                     <input class="span3" type="text" id="inputMaxElements" placeholder="Max Elements">
-                    <span class="help-block">1000 by default. Not considered when 'subscribe' is active</span>
+                    <span class="help-block">1000 by default. Considered only when 'Pop' method is selected</span>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label" for="inputTimeout">Timeout</label>
                 <div class="controls">
                     <input class="span3" type="text" id="inputTimeout" placeholder="Timeout (seconds)">
-                    <span class="help-block">0 by default. Not considered when 'subscribe' is active</span>
+                    <span class="help-block">0 by default. Considered only when 'Pop' method is selected</span>
                 </div>
             </div>
             <div class="control-group">

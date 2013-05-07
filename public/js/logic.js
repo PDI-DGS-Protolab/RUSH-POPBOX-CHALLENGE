@@ -62,7 +62,7 @@ function sendRushRequest() {
 
   topic.queues = queuesObj;
   topic.errorQueue = uuid;
-  
+
   //Hide alert Rush
   $('#alertRush').addClass('hidden');
 
@@ -108,6 +108,7 @@ function createDivForQueue(queueID, subscribe, socket) {
 
   var div = document.getElementById('queue' + queueID);
   var btn;
+  var h2;
 
   //If the div element does not exist, it's created
   if (!div) {
@@ -116,8 +117,9 @@ function createDivForQueue(queueID, subscribe, socket) {
     div.setAttribute('class', 'hero-unit hidden');
     div.setAttribute('style', 'padding: 20px;')
 
-    var h2 = document.createElement('h2');
-    h2.appendChild(document.createTextNode('Queue ' + queueID));
+    h2 = document.createElement('h2');
+    h2.setAttribute('id', 'queue' + queueID + 'text')
+    //h2.appendChild(document.createTextNode('Queue ' + queueID));
 
     btn = document.createElement('button');
     btn.setAttribute('id', 'unsubscribe' + queueID);
@@ -131,16 +133,23 @@ function createDivForQueue(queueID, subscribe, socket) {
     document.getElementById('picturesDiv').appendChild(div);
   } else {
     btn = document.getElementById('unsubscribe' + queueID);
+    h2 = document.getElementById('queue' + queueID + 'text');
+  }
+
+  if (h2.firstChild) {
+    h2.removeChild(h2.firstChild);
   }
 
   if (subscribe) {
 
     if (socket) {
+      h2.appendChild(document.createTextNode('Queue ' + queueID + ' (WebSockets)'));
       btn.onclick = function() {
         socket.disconnect();
         $('#unsubscribe' + queueID).addClass('hidden');
       }
     } else {
+      h2.appendChild(document.createTextNode('Queue ' + queueID + ' (Recursive Pop)'));
       btn.onclick = function() {
         subscriptionsToBeClosed.push(queueID);
         $('#unsubscribe' + queueID).addClass('hidden');
@@ -149,6 +158,8 @@ function createDivForQueue(queueID, subscribe, socket) {
 
     $('#queue' + queueID).removeClass('hidden');
     $('#unsubscribe' + queueID).removeClass('hidden');
+  } else {
+    h2.appendChild(document.createTextNode('Queue ' + queueID + ' (Pop)'));
   }
 
   return div;
@@ -268,7 +279,7 @@ function webSockets() {
 
   resetPopBoxFileds();
 
-  var socket = io.connect('http://localhost:5001', {'force new connection': true});
+  var socket = io.connect('http://' + location.hostname + ':5001', {'force new connection': true});
   var div = createDivForQueue(queueID, true, socket);
 
   socket.on('connected', function(data){
@@ -276,7 +287,6 @@ function webSockets() {
     socket.emit('subscribe', queueID);
 
     socket.on('data', function(data) {
-      console.log(data);
       insertImageInDiv(div, data.data.pop());
     });
 
