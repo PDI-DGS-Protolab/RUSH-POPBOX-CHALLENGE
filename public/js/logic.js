@@ -22,7 +22,7 @@ function sendRequestThroughProxy(url, method, headers, content, callback) {
 
   try {
 
-    var proxyURL = "http://localhost:2001/" + url;
+    var proxyURL = 'http://' + location.host + '/' + url;
     var req = new XMLHttpRequest();
 
     req.open(method, proxyURL, true);
