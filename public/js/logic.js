@@ -145,12 +145,16 @@ function createDivForQueue(queueID, subscribe, socket) {
     if (socket) {
       h2.appendChild(document.createTextNode('Queue ' + queueID + ' (WebSockets)'));
       btn.onclick = function() {
+        var indexQueue = currentSubscriptions.indexOf(queueID);
+        currentSubscriptions.remove(indexQueue, indexQueue);
         socket.disconnect();
         $('#unsubscribe' + queueID).addClass('hidden');
       }
     } else {
       h2.appendChild(document.createTextNode('Queue ' + queueID + ' (Recursive Pop)'));
       btn.onclick = function() {
+        var indexQueue = currentSubscriptions.indexOf(queueID);
+        currentSubscriptions.remove(indexQueue, indexQueue);
         subscriptionsToBeClosed.push(queueID);
         $('#unsubscribe' + queueID).addClass('hidden');
       }
@@ -266,31 +270,41 @@ function subscribe() {
 
   var queueInput = document.getElementById('inputQueue');
   var queueID = queueInput.value;
+  var indexQueue = currentSubscriptions.indexOf(queueID);
 
-  resetPopBoxFileds();
+  if (indexQueue !== -1) {
+    $('#alreadySubscribedModal').modal('show');
+  } else {
+    currentSubscriptions.push(queueID);
+    resetPopBoxFileds();
+    sendPopBoxRequest(queueID, 60, 1, true);
+  }
 
-  sendPopBoxRequest(queueID, 60, 1, true);
 }
 
 function webSockets() {
 
   var queueInput = document.getElementById('inputQueue');
   var queueID = queueInput.value;
+  var indexQueue = currentSubscriptions.indexOf(queueID);
 
-  resetPopBoxFileds();
+  if (indexQueue !== -1) {
+    $('#alreadySubscribedModal').modal('show');
+  } else {
 
-  var socket = io.connect('http://' + location.hostname + ':5001', {'force new connection': true});
-  var div = createDivForQueue(queueID, true, socket);
+    currentSubscriptions.push(queueID);
+    resetPopBoxFileds();
 
-  socket.on('connected', function(data){
+    var socket = io.connect('http://' + location.hostname + ':5001', {'force new connection': true});
+    var div = createDivForQueue(queueID, true, socket);
 
-    socket.emit('subscribe', queueID);
-
-    socket.on('data', function(data) {
-      insertImageInDiv(div, data.data.pop());
+    socket.on('connected', function(data){
+      socket.emit('subscribe', queueID);
+      socket.on('data', function(data) {
+        insertImageInDiv(div, data.data.pop());
+      });
     });
-
-  });
+  }
 }
 
 //Load URLS from a file
@@ -390,7 +404,6 @@ function getErrors() {
 }
 
 //MAIN SCRIPT
-var iosocket;       //Socket.IO (necessary to reconnect)
 var uuid = guid();  //Error queue ID
 getErrors();        //Subscribe to error events
 
@@ -439,6 +452,9 @@ $('#popBoxForm').on('submit', function(ev) {
 
 //Subscriptions to be closed
 var subscriptionsToBeClosed = [];
+
+//Current Subscriptions
+var currentSubscriptions = [];
 
 //Check Errors Button action on click
 $('#checkErrorsBtn').on('click', function() {
