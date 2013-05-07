@@ -62,6 +62,9 @@ function sendRushRequest() {
 
   topic.queues = queuesObj;
   topic.errorQueue = uuid;
+  
+  //Hide alert Rush
+  $('#alertRush').addClass('hidden');
 
   //One Request by URL
   for (var i = 0; i < urls.length; i++) {
