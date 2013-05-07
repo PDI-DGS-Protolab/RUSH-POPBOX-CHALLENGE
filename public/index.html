@@ -146,10 +146,24 @@
                 </div>
             </div>
             <div class="control-group">
+                <label class="control-label">Method</label>
                 <div class="controls">
-                    <label class="checkbox">
-                        <input id="subscribeCheckBox" type="checkbox"> Subscribe
+                    <label class="radio">
+                        <input type="radio" name="methodRadios" id="optionsRadiosPop" value="pop" checked>
+                        Pop
                     </label>
+                    <label class="radio">
+                        <input type="radio" name="methodRadios" id="optionsRadiosSubscribe" value="subscribe">
+                        Subscribe (recursive pop)
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="methodRadios" id="optionsRadiosWebSockets" value="webSockets">
+                        Web Sockets (Socket.IO)
+                    </label>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
                     <button id="popBtn" type="submit" class="btn" data-loading-text="Loading...">Submit</button>
                 </div>
             </div>
@@ -191,6 +205,7 @@
 
 <!-- JAVASCRIPT -->
 <script src="http://code.jquery.com/jquery.js"></script>
+<script src="js/socket.io.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/logic.js"></script>
 

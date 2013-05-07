@@ -63,7 +63,7 @@ server.port = 2001;
 //Config URL
 server.all(POPBOX_PATH + '*', popbox);
 server.all(RUSH_PATH + '*', rush);
-server.use('/', express.static(path.dirname(module.filename)));
+server.use('/', express.static(path.dirname(module.filename) + '/public'));
 
 //Start server
 server.listen(server.port);

@@ -50,6 +50,7 @@ function sendRushRequest() {
   var inputQueues = document.getElementById('inputQueues');
   var urls = textAreaURLs.value.split('\n');
   var queuesObj = [];
+  var topic = {};
   var queues = inputQueues.value.split(',');
   var total = 0, completed = 0, errored = 0;
 
@@ -58,7 +59,9 @@ function sendRushRequest() {
     var queueWithoutSpaces = queues[i].split(' ').join('');
     queuesObj.push({id: queueWithoutSpaces});
   }
-  queuesObj.push({errorID: uuid});
+
+  topic.queues = queuesObj;
+  topic.errorQueue = uuid;
 
   //One Request by URL
   for (var i = 0; i < urls.length; i++) {
@@ -67,7 +70,7 @@ function sendRushRequest() {
 
     headers['x-relayer-host'] = urls[i] + '#' + Math.random();  //Avoid cache
     headers['x-relayer-encoding'] = 'base64';
-    headers['x-relayer-topic'] = JSON.stringify(queuesObj);
+    headers['x-relayer-topic'] = JSON.stringify(topic);
 
     var callback = function(url, queues, req) {
 
@@ -98,17 +101,10 @@ function sendRushRequest() {
 
 }
 
-function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
-
-  var popBoxPath;
-  var headers = {};
-
-  timeout = (subscribe) ? 60 : timeout;
-  maxElements = (subscribe) ? 1 : maxElements;
-  popBoxPath = 'popbox/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
-  headers['accept'] = 'application/json';
+function createDivForQueue(queueID, subscribe, socket) {
 
   var div = document.getElementById('queue' + queueID);
+  var btn;
 
   //If the div element does not exist, it's created
   if (!div) {
@@ -120,27 +116,70 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
     var h2 = document.createElement('h2');
     h2.appendChild(document.createTextNode('Queue ' + queueID));
 
-    var btn = document.createElement('button');
+    btn = document.createElement('button');
     btn.setAttribute('id', 'unsubscribe' + queueID);
     btn.setAttribute('type', 'button');
     btn.setAttribute('class', 'close hidden');
     btn.setAttribute('aria-hidden', 'true');
     btn.appendChild(document.createTextNode('Unsubscribe'));
 
-    btn.onclick = function() {
-      subscriptionsToBeClosed.push(queueID);
-      $('#unsubscribe' + queueID).addClass('hidden');
-    }
-
     div.appendChild(btn);
     div.appendChild(h2);
     document.getElementById('picturesDiv').appendChild(div);
+  } else {
+    btn = document.getElementById('unsubscribe' + queueID);
   }
 
   if (subscribe) {
+
+    if (socket) {
+      btn.onclick = function() {
+        socket.disconnect();
+        $('#unsubscribe' + queueID).addClass('hidden');
+      }
+    } else {
+      btn.onclick = function() {
+        subscriptionsToBeClosed.push(queueID);
+        $('#unsubscribe' + queueID).addClass('hidden');
+      }
+    }
+
     $('#queue' + queueID).removeClass('hidden');
     $('#unsubscribe' + queueID).removeClass('hidden');
   }
+
+  return div;
+
+}
+
+function insertImageInDiv(div, data) {
+  var link = document.createElement('a');
+  var img = document.createElement("img");
+
+  //Link
+  link.setAttribute('href', 'data:image/png;base64,' + data);
+  link.setAttribute('target', '_blank');
+
+  //Image
+  img.setAttribute('src', 'data:image/png;base64,' + data);
+  img.setAttribute('style', 'height: 75px');
+  img.setAttribute('alt', 'Your picture');
+
+  link.appendChild(img);
+  div.appendChild(link);
+}
+
+function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
+
+  var popBoxPath;
+  var headers = {};
+
+  timeout = (subscribe) ? 60 : timeout;
+  maxElements = (subscribe) ? 1 : maxElements;
+  popBoxPath = 'popbox/queue/' + queueID + '/pop?timeout=' + timeout + '&max=' + maxElements;
+  headers['accept'] = 'application/json';
+
+  var div = createDivForQueue(queueID, subscribe);
 
   var callbackHTTP = function(req) {
 
@@ -151,21 +190,7 @@ function sendPopBoxRequest(queueID, timeout, maxElements, subscribe, callback) {
       $('#queue' + queueID).removeClass('hidden');
 
       for (var i = 0; i < receivedData.data.length; i++) {
-
-        var link = document.createElement('a');
-        var img = document.createElement("img");
-
-        //Link
-        link.setAttribute('href', 'data:image/png;base64,' + receivedData.data[i]);
-        link.setAttribute('target', '_blank');
-
-        //Image
-        img.setAttribute('src', 'data:image/png;base64,' + receivedData.data[i]);
-        img.setAttribute('style', 'height: 75px');
-        img.setAttribute('alt', 'Your picture');
-
-        link.appendChild(img);
-        div.appendChild(link);
+        insertImageInDiv(div, receivedData.data[i]);
       }
 
     } else {
@@ -197,6 +222,11 @@ function resetPopBoxFileds() {
   queueInput.value = '';
   maxElementsInput.value = '';
   timeoutInput.value = '';
+
+  //Reset Method
+  $('input[id="optionsRadiosPop"]').prop('checked', true);
+  $('input[id="optionsRadiosSubscribe"]').prop('checked', false);
+  $('input[id="optionsRadiosWebSockets"]').prop('checked', false);
 }
 
 function pop() {
@@ -226,6 +256,28 @@ function subscribe() {
   resetPopBoxFileds();
 
   sendPopBoxRequest(queueID, 60, 1, true);
+}
+
+function webSockets() {
+
+  var queueInput = document.getElementById('inputQueue');
+  var queueID = queueInput.value;
+
+  resetPopBoxFileds();
+
+  var socket = io.connect('http://localhost:5001', {'force new connection': true});
+  var div = createDivForQueue(queueID, true, socket);
+
+  socket.on('connected', function(data){
+
+    socket.emit('subscribe', queueID);
+
+    socket.on('data', function(data) {
+      console.log(data);
+      insertImageInDiv(div, data.data.pop());
+    });
+
+  });
 }
 
 //Load URLS from a file
@@ -325,6 +377,7 @@ function getErrors() {
 }
 
 //MAIN SCRIPT
+var iosocket;       //Socket.IO (necessary to reconnect)
 var uuid = guid();  //Error queue ID
 getErrors();        //Subscribe to error events
 
@@ -351,19 +404,23 @@ $('#rushForm').on('submit', function() {
 //PopBox form action on submit
 $('#popBoxForm').on('submit', function(ev) {
 
-  var checkBox = document.getElementById('subscribeCheckBox');
+  var method = $("input[name='methodRadios']:checked").val();
 
   try {
-    if (checkBox.checked) {
+    if (method === 'subscribe') {
       subscribe();
-    } else {
+    } else if (method === 'pop') {
       pop();
+    } else if (method === 'webSockets') {
+      webSockets();
     }
   } catch (e) {
-
+    console.log(e);
   }
 
-  checkBox.checked = false;
+
+
+
   return false;
 });
 

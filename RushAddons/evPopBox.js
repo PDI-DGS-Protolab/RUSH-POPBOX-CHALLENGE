@@ -71,23 +71,14 @@ function init(emitter) {
         'expirationDate': Math.round(new Date().getTime() / 1000 + 3600)
       };
 
-      var queues = JSON.parse(data.topic);
-      var queueErrorID;
-
-      for (var i = 0; i < queues.length; i++) {
-        if (queues[i].errorID) {
-          queueErrorID = queues[i].errorID;
-          queues.remove(i, i);
-        }
-      }
+      var topic = JSON.parse(data.topic);
+      var queues = topic.queues;
+      var queueErrorID = topic.errorQueue;
 
       if (data.state === MG.STATE_COMPLETED) {
 
-        var encoding = data.result.encoding;
-        var message = data.result.body;
-
-        trans.payload = message;
-        trans.encoding = encoding;
+        trans.payload = data.result.body;
+        trans.encoding = data.result.encoding;
         trans.queue = queues;
 
         sendReq(trans);
